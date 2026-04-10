@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Sound Preview Tool</title>
+  <title>Sound Tool - Game UI</title>
 
   <style>
     body {
@@ -15,12 +15,12 @@
       height: 100vh;
     }
 
-    /* 🧭 NAVBAR */
+    /* 🧭 BAR */
     .navbar {
-      background: #111;
-      padding: 10px;
       display: flex;
       gap: 10px;
+      padding: 10px;
+      background: #111;
       align-items: center;
     }
 
@@ -50,7 +50,7 @@
 
     .info {
       padding: 10px;
-      font-size: 14px;
+      font-size: 13px;
       color: #aaa;
     }
   </style>
@@ -58,12 +58,12 @@
 
 <body>
 
-  <!-- 🧭 NAVBAR -->
+  <!-- 🧭 TOOL BAR -->
   <div class="navbar">
 
     <textarea id="code">
-// Escribe aquí SOLO frecuencia o función
-play(600);
+// Escribe:
+play("click");
     </textarea>
 
     <button onclick="runCode()">▶ Play</button>
@@ -71,41 +71,60 @@ play(600);
   </div>
 
   <div class="info">
-    Ejemplo: play(800) | play(300) | play(1000)
+    Tip: click / soft / pop
   </div>
 
   <script>
-    let ctx;
+    let audioCtx;
 
-    function init() {
-      if (!ctx) {
-        ctx = new (window.AudioContext || window.webkitAudioContext)();
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       }
     }
 
-    function play(freq) {
-      init();
+    // 🎮 SONIDO TIPO JUEGO MODERNO (NO ELECTRÓNICO)
+    function play(type) {
+      initAudio();
 
-      const o = ctx.createOscillator();
-      const g = ctx.createGain();
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
 
       o.connect(g);
-      g.connect(ctx.destination);
+      g.connect(audioCtx.destination);
 
-      o.type = "square";
+      let freq = 180;
+      let shape = "triangle";
+
+      if (type === "click") {
+        freq = 180;   // thock
+        shape = "triangle";
+      }
+
+      if (type === "soft") {
+        freq = 120;   // suave
+        shape = "sine";
+      }
+
+      if (type === "pop") {
+        freq = 260;   // pop UI
+        shape = "triangle";
+      }
+
+      o.type = shape;
       o.frequency.value = freq;
 
-      g.gain.value = 0.05;
+      g.gain.value = 0.06;
 
       o.start();
-      o.stop(ctx.currentTime + 0.08);
+      o.stop(audioCtx.currentTime + 0.08);
     }
 
     function runCode() {
       const code = document.getElementById("code").value;
 
       try {
-        eval(code); // ⚡ ejecuta play(600)
+        eval(code);
       } catch (e) {
         alert("Error en código");
       }
