@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Sound Tool - Game UI</title>
+  <title>Sound Tool - Real Game UI</title>
 
   <style>
     body {
@@ -15,7 +15,6 @@
       height: 100vh;
     }
 
-    /* 🧭 BAR */
     .navbar {
       display: flex;
       gap: 10px;
@@ -62,8 +61,10 @@
   <div class="navbar">
 
     <textarea id="code">
-// Escribe:
+// Sonidos disponibles:
 play("click");
+play("soft");
+play("heavy");
     </textarea>
 
     <button onclick="runCode()">▶ Play</button>
@@ -71,7 +72,7 @@ play("click");
   </div>
 
   <div class="info">
-    Tip: click / soft / pop
+    🎮 click = fuerte | soft = suave | heavy = grave
   </div>
 
   <script>
@@ -83,41 +84,49 @@ play("click");
       }
     }
 
-    // 🎮 SONIDO TIPO JUEGO MODERNO (NO ELECTRÓNICO)
+    // 🎮 SONIDO REALISTA (NO ELECTRÓNICO)
     function play(type) {
       initAudio();
 
-      const o = audioCtx.createOscillator();
-      const g = audioCtx.createGain();
+      const bufferSize = audioCtx.sampleRate * 0.06;
+      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const data = buffer.getChannelData(0);
 
-      o.connect(g);
-      g.connect(audioCtx.destination);
+      // 🔊 ruido tipo “golpe físico”
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+      }
 
-      let freq = 180;
-      let shape = "triangle";
+      const noise = audioCtx.createBufferSource();
+      noise.buffer = buffer;
+
+      const filter = audioCtx.createBiquadFilter();
+      filter.type = "lowpass";
+
+      let cutoff = 800;
 
       if (type === "click") {
-        freq = 180;   // thock
-        shape = "triangle";
+        cutoff = 900;
       }
 
       if (type === "soft") {
-        freq = 120;   // suave
-        shape = "sine";
+        cutoff = 500;
       }
 
-      if (type === "pop") {
-        freq = 260;   // pop UI
-        shape = "triangle";
+      if (type === "heavy") {
+        cutoff = 250;
       }
 
-      o.type = shape;
-      o.frequency.value = freq;
+      filter.frequency.value = cutoff;
 
-      g.gain.value = 0.06;
+      const gain = audioCtx.createGain();
+      gain.gain.value = 0.09;
 
-      o.start();
-      o.stop(audioCtx.currentTime + 0.08);
+      noise.connect(filter);
+      filter.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      noise.start();
     }
 
     function runCode() {
